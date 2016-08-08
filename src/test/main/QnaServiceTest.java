@@ -12,8 +12,10 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -36,18 +38,30 @@ public class QnaServiceTest {
 
     @Before
     public void setup() throws Exception{
+
+
+    }
+
+    @Test(expected = EmptyResultDataAccessException.class)
+    public void test_없는질문() throws Exception {
+        when(questionDao.findById(0)).thenReturn(null);
+        qnaService.deleteQuestion(0, new User());
+    }
+
+    @Test
+    public void test_질문삭제답변이없을때() throws Exception {
         when(questionDao.findById(0)).thenReturn(new Question("jojoldu", "title", "contents"));
         when(answerDao.findAllByQuestionId(0)).thenReturn(new ArrayList<>());
+        assertThat(qnaService.deleteQuestion(0, new User("jojoldu", "1234", "name", "jojoldu@gmail.com")), is(true));
     }
 
     @Test
-    public void test_질문삭제와답변0() throws Exception {
-        assertThat(qnaService.deleteQuestion(0, new User("jojoldu", "1234", "name", "jojoldu@gmail.com")), is(false));
-    }
-
-    @Test
-    public void test_질문삭제와답변1() throws Exception {
-        assertThat(qnaService.deleteQuestion(0, new User("jojoldu", "1234", "name", "jojoldu@gmail.com")), is(false));
+    public void test_질문삭제답변이있을때() throws Exception {
+        List<Answer> answers = new ArrayList<>();
+        answers.add(new Answer("jojoldu", "", 0));
+        when(questionDao.findById(0)).thenReturn(new Question("jojoldu", "title", "contents"));
+        when(answerDao.findAllByQuestionId(0)).thenReturn(answers);
+        assertThat(qnaService.deleteQuestion(0, new User("jojoldu", "1234", "name", "jojoldu@gmail.com")), is(true));
     }
 
 }
