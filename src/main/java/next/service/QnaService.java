@@ -14,8 +14,8 @@ import next.model.User;
 public class QnaService {
 	private static QnaService qnaService;
 
-	private QuestionDao questionDao = QuestionDao.getInstance();
-	private AnswerDao answerDao = AnswerDao.getInstance();
+	private QuestionDao questionDao;
+	private AnswerDao answerDao;
 
 	private QnaService() {
 	}
@@ -35,7 +35,7 @@ public class QnaService {
 		return answerDao.findAllByQuestionId(questionId);
 	}
 
-	public void deleteQuestion(long questionId, User user) throws CannotOperateException {
+	public boolean deleteQuestion(long questionId, User user) throws CannotOperateException {
 		Question question = questionDao.findById(questionId);
 		if (question == null) {
 			throw new EmptyResultDataAccessException("존재하지 않는 질문입니다.", 1);
@@ -48,7 +48,7 @@ public class QnaService {
 		List<Answer> answers = answerDao.findAllByQuestionId(questionId);
 		if (answers.isEmpty()) {
 			questionDao.delete(questionId);
-			return;
+			return false;
 		}
 
 		boolean canDelete = true;
@@ -65,6 +65,7 @@ public class QnaService {
 		}
 
 		questionDao.delete(questionId);
+		return true;
 	}
 
 	public void updateQuestion(long questionId, Question newQuestion, User user) throws CannotOperateException {
